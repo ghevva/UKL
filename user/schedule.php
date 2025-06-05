@@ -5,13 +5,18 @@ $password = '';
 $database = 'school_life';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$database", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
+    $mysqli = new mysqli($host, $username, $password, $database);
+    
+    if ($mysqli->connect_error) {
+        die("Koneksi gagal: " . $mysqli->connect_error);
+    }
+
+    $mysqli->set_charset("utf8");
+} catch(Exception $e) {
     die("Koneksi gagal: " . $e->getMessage());
 }
 
-function getJadwalPelajaran($pdo, $kelas_filter = null, $hari_filter = null) {
+function getJadwalPelajaran($mysqli, $kelas_filter, $hari_filter) {
     $sql = "SELECT kelas.nama_kelas, guru.nama, mapel.nama_mapel, jadwal_pelajaran.waktu, jadwal_pelajaran.hari, jadwal_pelajaran.id_jadwal_pelajaran
     FROM jadwal_pelajaran
     JOIN kelas ON jadwal_pelajaran.id_kelas = kelas.id_kelas
@@ -21,16 +26,27 @@ function getJadwalPelajaran($pdo, $kelas_filter = null, $hari_filter = null) {
 
     $params = [];
     
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $mysqli->prepare($sql);
+    if (!$stmt->execute()) {
+        die("Execute gagal: " . $stmt->error);
+    }
+    
+    $result = $stmt->get_result();
+    $data = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+    
+    $stmt->close();
+    return $data;
+
 }
 
 $kelas_filter = isset($_GET['id_kelas']) ? $_GET['id_kelas'] : null;
 $hari_filter = isset($_GET['hari']) ? $_GET['hari'] : null;
 
-$jadwal = getJadwalPelajaran($pdo, $kelas_filter, $hari_filter);
-$hari_list = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+$jadwal = getJadwalPelajaran($mysqli, $kelas_filter, $hari_filter);
 ?>
 
 <!DOCTYPE html>
@@ -92,33 +108,33 @@ $hari_list = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
                                 <tr>
                                     <td>
                                         <span class="hari-badge <?= strtolower($row['hari']) ?>">
-                                            <?= htmlspecialchars($row['hari']) ?>
+                                            <?=($row['hari']) ?>
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="waktu"><?= htmlspecialchars($row['waktu']) ?></span>
+                                        <span class="waktu"><?=($row['waktu']) ?></span>
                                     </td>
                                     <td>
-                                        <strong><?= htmlspecialchars($row['nama_mapel']) ?></strong>
+                                        <strong><?=($row['nama_mapel']) ?></strong>
                                     </td>
                                     <td>
-                                        <span class="kelas"><?= htmlspecialchars($row['nama_kelas']) ?></span>
+                                        <span class="kelas"><?=($row['nama_kelas']) ?></span>
                                     </td>
                                     <td>
-                                        <span class="guru"><?= htmlspecialchars($row['nama']) ?></span>
+                                        <span class="guru"><?=($row['nama']) ?></span>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
-            <?php ?>
+            </div>
         </div>
     </div>
 
     <script>
-        function showView(viewType) {
-            const tableView = document.getElementById('table-view');
+        showView(viewType) {
+            tableView = document.getElementById('table-view');
 
             if (viewType === 'table') {
                 cardView.style.display = 'none';
