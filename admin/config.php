@@ -1,7 +1,7 @@
 <?php
 $host = 'localhost';
-$user = 'root'; // ganti dengan username database Anda
-$password = ''; // ganti dengan password database Anda
+$user = 'root';
+$password = '';
 $dbname = 'school_life';
 
 $conn = new mysqli($host, $user, $password, $dbname);
