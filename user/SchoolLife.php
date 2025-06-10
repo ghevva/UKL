@@ -155,7 +155,7 @@
 
       <div class="box">
         <h3>contact info</h3>
-        <a href="#">+62 823-3666-4466</a>
+        <a href="">+62 823-3666-4466</a>
         <a href="https://www.instagram.com/smktelkomsda?igsh=MTVnMTg0djJ2aG1nNw==">@smktelkomsda</a>
         <a href="https://g.co/kgs/tTm1RtT">Jl.Pecantingan, Sekardangan Indah, Sekardangan, Kec.Sidoarjo, Kabupaten Sidoarjo, Jawa Timur</a>
         <a href="https://mail.google.com/mail/u/0/?tf=cm&fs=1&to=smktelkomsda@gmail.com">Get in touch in smktelkomsda@gmail.com </a>
