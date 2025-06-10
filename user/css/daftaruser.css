@@ -159,7 +159,7 @@ a:hover {
     transform: translateY(-3px) scale(1.05);
 }
 
-tr:last-child td:last-child {
+tr, td {
     display: flex;
     gap: 15px;
     align-items: center;

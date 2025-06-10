@@ -20,11 +20,6 @@ body {
     overflow: hidden;
 }
 
-@keyframes float {
-    0% { transform: translate(0, 0) rotate(0deg); }
-    100% { transform: translate(-50px, -50px) rotate(360deg); }
-}
-
 form {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);

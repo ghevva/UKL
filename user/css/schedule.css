@@ -243,16 +243,7 @@ body {
     color: white;
 }
 
-@media (max-width: 768px) {
-    .filter-row {
-        flex-direction: column;
-        align-items: stretch;
-    }
-            
-    .filter-group select {
-        min-width: 100%;
-    }
-            
+@media (max-width: 768px) { 
     .jadwal-grid {
         grid-template-columns: 1fr;
     }

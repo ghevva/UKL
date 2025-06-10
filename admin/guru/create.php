@@ -4,7 +4,7 @@ include '../config.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nama = $_POST['nama'];
 
-    $conn->query("INSERT INTO guru (id_kelas, nama) VALUES ('$nama')");
+    $conn->query("INSERT INTO guru (nama) VALUES ('$nama')");
     header("Location: index.php");
 }
 ?>
