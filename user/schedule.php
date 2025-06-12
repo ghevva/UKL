@@ -21,12 +21,36 @@ function getJadwalPelajaran($mysqli, $kelas_filter, $hari_filter) {
     FROM jadwal_pelajaran
     JOIN kelas ON jadwal_pelajaran.id_kelas = kelas.id_kelas
     JOIN guru ON jadwal_pelajaran.id_guru = guru.id_guru
-    JOIN mapel ON jadwal_pelajaran.id_mapel = mapel.id_mapel
-    " or die(mysqli_error($conn));
+    JOIN mapel ON jadwal_pelajaran.id_mapel = mapel.id_mapel";
 
+    $conditions = [];
     $params = [];
-    
+    $types = "";
+
+    if (!empty($kelas_filter)) {
+        $conditions[] = "kelas.id_kelas = ?";
+        $params[] = $kelas_filter;
+        $types .= "i";
+    }
+
+    if (!empty($hari_filter)) {
+        $conditions[] = "jadwal_pelajaran.hari = ?";
+        $params[] = $hari_filter;
+        $types .= "s";
+    }
+
+    if (!empty($conditions)) {
+        $sql .= " WHERE " . implode(" AND ", $conditions);
+    }
+
+    $sql .= " ORDER BY FIELD(jadwal_pelajaran.hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'), jadwal_pelajaran.waktu";
+
     $stmt = $mysqli->prepare($sql);
+    
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    
     if (!$stmt->execute()) {
         die("Execute gagal: " . $stmt->error);
     }
@@ -40,13 +64,25 @@ function getJadwalPelajaran($mysqli, $kelas_filter, $hari_filter) {
     
     $stmt->close();
     return $data;
+}
 
+function getKelasList($mysqli) {
+    $sql = "SELECT id_kelas, nama_kelas FROM kelas ORDER BY nama_kelas";
+    $result = $mysqli->query($sql);
+    $kelas = [];
+    while ($row = $result->fetch_assoc()) {
+        $kelas[] = $row;
+    }
+    return $kelas;
 }
 
 $kelas_filter = isset($_GET['id_kelas']) ? $_GET['id_kelas'] : null;
 $hari_filter = isset($_GET['hari']) ? $_GET['hari'] : null;
 
 $jadwal = getJadwalPelajaran($mysqli, $kelas_filter, $hari_filter);
+$kelas_list = getKelasList($mysqli);
+
+$hari_list = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
 ?>
 
 <!DOCTYPE html>
@@ -55,8 +91,8 @@ $jadwal = getJadwalPelajaran($mysqli, $kelas_filter, $hari_filter);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="css/school_life.css">
-    <link rel="stylesheet" href="css/schedule.css">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/schedulee.css">
 </head>
 <body>
     <hr>
@@ -82,17 +118,78 @@ $jadwal = getJadwalPelajaran($mysqli, $kelas_filter, $hari_filter);
     <br>
     <br>
     <div class="container">
-        <h1 class="heading"> 📚 Jadwal <span>Pelajaran</h1>
+        <h1 class="heading"> 📚 Jadwal <span>Pelajaran</span></h1>
+
+        <div class="filter-container">
+            <form method="GET" action="">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="id_kelas">Kelas:</label>
+                        <select name="id_kelas" id="id_kelas">
+                            <option value="">-- Semua Kelas --</option>
+                            <?php foreach ($kelas_list as $kelas): ?>
+                                <option value="<?= $kelas['id_kelas'] ?>" 
+                                        <?= ($kelas_filter == $kelas['id_kelas']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($kelas['nama_kelas']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="hari">Hari:</label>
+                        <select name="hari" id="hari">
+                            <option value="">-- Semua Hari --</option>
+                            <?php foreach ($hari_list as $hari): ?>
+                                <option value="<?= $hari ?>" 
+                                        <?= ($hari_filter == $hari) ? 'selected' : '' ?>>
+                                    <?= $hari ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-buttons">
+                        <a href="schedule.php" class="btn btn-secondary">Reset</a>
+                    </div>
+                </div>
+                
+                <?php if (!empty($kelas_filter) || !empty($hari_filter)): ?>
+                    <div class="active-filters">
+                        <strong>Filter Aktif:</strong>
+                        <?php if (!empty($kelas_filter)): ?>
+                            <?php 
+                            $selected_kelas = array_filter($kelas_list, function($k) use ($kelas_filter) {
+                                return $k['id_kelas'] == $kelas_filter;
+                            });
+                            $selected_kelas = reset($selected_kelas);
+                            ?>
+                            <span class="filter-tag">
+                                Kelas: <?= htmlspecialchars($selected_kelas['nama_kelas']) ?>
+                                <span class="remove" onclick="removeFilter('id_kelas')"></span>
+                            </span>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($hari_filter)): ?>
+                            <span class="filter-tag">
+                                Hari: <?= htmlspecialchars($hari_filter) ?>
+                                <span class="remove" onclick="removeFilter('hari')"></span>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </form>
+        </div>
 
         <div class="content">
-            <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-number"><?= count(array_unique(array_column($jadwal, 'nama_kelas'))) ?></div>
-                    <div class="stat-label">Kelas Aktif</div>
-                </div>
-            </div>
                 
-                <div id="table-view">
+            <div id="table-view">
+                <?php if (empty($jadwal)): ?>
+                    <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 10px;">
+                        <h3>Tidak ada jadwal yang ditemukan</h3>
+                        <p>Coba ubah filter atau <a href="schedule.php">reset filter</a> untuk melihat semua jadwal.</p>
+                    </div>
+                <?php else: ?>
                     <table class="jadwal-table">
                         <thead>
                             <tr>
@@ -108,49 +205,50 @@ $jadwal = getJadwalPelajaran($mysqli, $kelas_filter, $hari_filter);
                                 <tr>
                                     <td>
                                         <span class="hari-badge <?= strtolower($row['hari']) ?>">
-                                            <?=($row['hari']) ?>
+                                            <?= htmlspecialchars($row['hari']) ?>
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="waktu"><?=($row['waktu']) ?></span>
+                                        <span class="waktu"><?= htmlspecialchars($row['waktu']) ?></span>
                                     </td>
                                     <td>
-                                        <strong><?=($row['nama_mapel']) ?></strong>
+                                        <strong><?= htmlspecialchars($row['nama_mapel']) ?></strong>
                                     </td>
                                     <td>
-                                        <span class="kelas"><?=($row['nama_kelas']) ?></span>
+                                        <span class="kelas"><?= htmlspecialchars($row['nama_kelas']) ?></span>
                                     </td>
                                     <td>
-                                        <span class="guru"><?=($row['nama']) ?></span>
+                                        <span class="guru"><?= htmlspecialchars($row['nama']) ?></span>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
     <script>
-        showView(viewType) {
-            tableView = document.getElementById('table-view');
-
-            if (viewType === 'table') {
-                cardView.style.display = 'none';
-                tableView.style.display = 'block';
-                buttons[1].classList.add('active');
-            }
+        function removeFilter(filterType) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete(filterType);
+            window.location.href = url.toString();
         }
+        
+        document.getElementById('id_kelas').addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        document.getElementById('hari').addEventListener('change', function() {
+            this.form.submit();
+        });
     </script>
     <br>
     <br>
     <br>
     <section class="footer">
-
         <div class="box-container">
-      
-
             <div class="box">
                 <h3>quick links</h3>
                 <a href="#home">home</a>
@@ -170,9 +268,7 @@ $jadwal = getJadwalPelajaran($mysqli, $kelas_filter, $hari_filter);
                 <a href="https://ppdb.smktelkom-sda.sch.id/">PPDB SMK Telkom Sidoarjo</a>
                 <a href="https://mail.google.com/mail/u/0/?tf=cm&fs=1&to=nurwandaghefarah@gmail.com">Get in touch in nurwandaghefarah@gmail.com </a>
             </div>
-
         </div>
-
     </section>
 
 </body>

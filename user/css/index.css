@@ -205,39 +205,6 @@ header .fa-bars{
     box-shadow: 0 1rem 2rem #999;
 }
 
-.e-learning {
-    background: var(--white);
-}
-
-.video-card {
-    background: var(--white);
-    border-radius: 1.5rem;
-    padding: 2rem;
-    margin-bottom: 3rem;
-    box-shadow: var(--shadow);
-    transition: transform 0.3s ease;
-    animation: fadeInUp 0.8s ease-out;
-}
-
-.video-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 2rem 4rem rgba(0,0,0,0.1);
-}
-
-.video-card h2 {
-    font-size: 2.2rem;
-    color: var(--secondary-color);
-    margin-bottom: 1.5rem;
-    text-align: center;
-}
-
-.video-card iframe {
-    width: 100%;
-    height: 30rem;
-    border-radius: 1rem;
-    box-shadow: var(--shadow);
-}
-
 .footer {
     background: #484343;
     color: #fff;

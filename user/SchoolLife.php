@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <title>Document</title>
-    <link rel="stylesheet" href="css/school_life.css">
+    <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
   <hr>
@@ -60,8 +60,6 @@
 
   </section>
 
-<!--Home Secton Ends-->
-
 <!--school rules section starts-->
 
   <section class="schoolrules" id="school rules">
@@ -84,10 +82,6 @@
   </section>
 <!--school rules section ends-->
 
-<!--schedule section starts-->
-
-<!--schedule section ends-->
-
 <!-- e-learning section starts-->
   <section class="e-learning" id="e-learning">
     <link rel="stylesheet" href="css/e_learning.css">
@@ -104,35 +98,61 @@
       die("Koneksi gagal: " . $conn->connect_error);
     }
 
-    $sql = "SELECT judul, url FROM e_learning";
+    $sql = "SELECT e_learning.judul, e_learning.url, mapel.nama_mapel, e_learning.id_e_learning 
+      FROM e_learning
+      INNER JOIN mapel ON e_learning.id_mapel = mapel.id_mapel 
+      ORDER BY mapel.nama_mapel, e_learning.judul";
+    
     $result = $conn->query($sql);
 
     function getYoutubeEmbedUrl($url) {
-    if (preg_match('/youtu\.be\/([^\?\/]+)/', $url, $matches)) {
-      return 'https://www.youtube.com/embed/' . $matches[1];
-    } elseif (preg_match('/v=([^\&]+)/', $url, $matches)) {
-      return 'https://www.youtube.com/embed/' . $matches[1];
-    }
-    return null;
+      if (preg_match('/youtu\.be\/([^\?\/]+)/', $url, $matches)) {
+        return 'https://www.youtube.com/embed/' . $matches[1];
+      } elseif (preg_match('/v=([^\&]+)/', $url, $matches)) {
+        return 'https://www.youtube.com/embed/' . $matches[1];
+      }
+      return null;
     }
 
     if ($result->num_rows > 0) {
+      $currentMapel = '';
+      $mapelCount = 0;
+        
       while ($row = $result->fetch_assoc()) {
+        if ($currentMapel !== $row['nama_mapel']) {
+          if ($mapelCount > 0) {
+            echo "</div>";
+            echo "</div>";
+          }
+                
+          $currentMapel = $row['nama_mapel'];
+          $mapelCount++;
+                
+          echo "<div class='subject-section'>";
+          echo "<h2 class='subject-title'>" . htmlspecialchars($currentMapel) . "</h2>";
+          echo "<div class='videos-container'>";
+        }
+            
         $embedUrl = getYoutubeEmbedUrl($row['url']);
         if ($embedUrl) {
           echo "<div class='video-card'>";
-          echo "<h2>" . htmlspecialchars($row['judul']) . "</h2>";
-          echo "<iframe src='" . htmlspecialchars($embedUrl) . "' allowfullscreen></iframe>";
+          echo "<h3 class='video-title'>" . htmlspecialchars($row['judul']) . "</h3>";
+          echo "<iframe src='" . htmlspecialchars($embedUrl) . "' frameborder='0' allowfullscreen></iframe>";
           echo "</div>";
         }
       }
+        
+      if ($mapelCount > 0) {
+        echo "</div>";
+        echo "</div>";
+      }
+        
     } else {
-      echo "<p>Tidak ada video.</p>";
+      echo "<p class='no-videos'>Tidak ada video pembelajaran yang tersedia.</p>";
     }
 
     $conn->close();
     ?>
-
   </section>
 <!--e-learning section ends>-->
 

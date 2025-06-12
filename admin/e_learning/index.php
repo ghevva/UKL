@@ -1,7 +1,12 @@
 <?php
 include '../config.php';
 
-$result = $conn->query("SELECT * FROM e_learning");
+    $query_mysql = mysqli_query($conn, "SELECT mapel.nama_mapel, e_learning.judul, e_learning.url, e_learning.id_e_learning
+    FROM e_learning
+    JOIN mapel ON e_learning.id_mapel = mapel.id_mapel
+    ") or die(mysqli_error($conn));
+
+    $nomor = 1;
 ?>
 
 <!DOCTYPE html>
@@ -31,13 +36,17 @@ $result = $conn->query("SELECT * FROM e_learning");
     <table border="1">
         <tr>
             <th>ID</th>
+            <th>Mapel</th>
             <th>Judul</th>
             <th>Url</th>
             <th>Aksi</th>
         </tr>
-        <?php while ($row = $result->fetch_assoc()): ?>
+        <?php
+        while($row = mysqli_fetch_array($query_mysql)) {
+        ?>
         <tr>
             <td><?php echo $row['id_e_learning']; ?></td>
+            <td><?php echo $row['nama_mapel']; ?></td>
             <td><?php echo $row['judul']; ?></td>
             <td><?php echo $row['url']; ?></td>
             <td>
@@ -45,7 +54,7 @@ $result = $conn->query("SELECT * FROM e_learning");
                 <a href="delete.php?id_e_learning=<?php echo $row['id_e_learning']; ?>">Hapus</a>
             </td>
         </tr>
-        <?php endwhile; ?>
+        <?php } ?>
     </table>
     </div>
 </body>

@@ -6,10 +6,11 @@ $result = $conn->query("SELECT * FROM e_learning WHERE id_e_learning=$id");
 $user = $result->fetch_assoc();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $mapel = $_POST['id_mapel'];
     $judul = $_POST['judul'];
     $url = $_POST['url'];
 
-    $conn->query("UPDATE e_learning SET judul='$judul', url='$url' WHERE id_e_learning=$id");
+    $conn->query("UPDATE e_learning SET id_mapel='$mapel', judul='$judul', url='$url' WHERE id_e_learning=$id");
     header("Location: index.php");
 }
 ?>
@@ -28,6 +29,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="container">
         <h2>Edit Data</h2>
         <form action="update.php" method="POST">
+            <label for="id_mapel">Mapel</label>
+            <select name="id_mapel" required
+                <option value=""></option>
+                <?php
+                $mapel = $conn->query("SELECT id_mapel, nama_mapel FROM mapel");
+                while ($w = $mapel->fetch_assoc()) {
+                    echo "<option value='{$w['id_mapel']}'>{$w['nama_mapel']}</option>";
+                }
+                ?>
+            </select>
             <input type="hidden" name="id_e_learning" value="<?= $user['id_e_learning'] ?>">
             <label for="judul">Judul</label>
             <input type="text" name="judul" value="<?= $user['judul'] ?>" required>
